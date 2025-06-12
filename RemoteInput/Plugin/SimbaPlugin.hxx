@@ -272,7 +272,7 @@ static const char* PascalTypes[] =
     "jvalue", "union z: jboolean; b: jbyte; c: jchar; s: jshort; i: jint; j: jlong; f: jfloat; d: jdouble; l: jobject; end;",
     "jobjectRefType", "(JNIInvalidRefType = 0, JNILocalRefType = 1, JNIGlobalRefType = 2, JNIWeakGlobalRefType = 3)",
 
-    "RemoteVM", "type TObject"
+    "RemoteVM", "type Pointer"
 };
 
 static const long int PascalExportCount = sizeof(PascalExports) / (sizeof(PascalExports[0]) * 2);
