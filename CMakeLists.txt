@@ -8,7 +8,11 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
 
-set(PYTHON_BINDINGS ON)
+# New: allow disabling the core build (C++ shared lib + Java/JNI/Python)
+option(BUILD_REMOTEINPUT_CORE "Build RemoteInput shared library (core, Java/JNI, optional Python)" ON)
+
+# Python binding toggles
+option(PYTHON_BINDINGS "Build Python bindings" OFF)
 set(USE_PYBIND11 OFF)
 set(USE_PYTHON3 OFF)
 set(USE_SYSTEM_PYBIND11 OFF)
@@ -32,8 +36,11 @@ set(JAVA_AWT_LIBRARY NotNeeded)
 set(JAVA_JVM_LIBRARY NotNeeded)
 set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 
-find_package(Java 1.8 REQUIRED)
-find_package(JNI 1.8 REQUIRED)
+# Only locate Java/JNI when building the core
+IF(BUILD_REMOTEINPUT_CORE)
+    find_package(Java 1.8 REQUIRED)
+    find_package(JNI 1.8 REQUIRED)
+ENDIF()
 
 IF(PYTHON_BINDINGS)
     IF(USE_PYBIND11)
@@ -139,6 +146,9 @@ ELSE()
             X11)
 ENDIF()
 
+
+# Only build the core shared library if requested
+IF(BUILD_REMOTEINPUT_CORE)
 
 # ----------------------------- SOURCES -----------------------------
 
@@ -416,3 +426,64 @@ ELSE()
             COMMENT "Renaming module to RemoteInput.so"
     )
 ENDIF()
+
+ENDIF() # BUILD_REMOTEINPUT_CORE
+
+# ----------------------------- NODE BINDINGS -----------------------------
+# Build a Node-API addon (remote_input.node). Disabled by default unless headers are provided.
+option(NODE_BINDINGS "Build Node-API addon" OFF)
+
+# Provide cache variables for include directories
+set(NODE_ADDON_API_DIR "" CACHE PATH "Path to node-addon-api include directory (contains napi.h)")
+set(NODE_INCLUDE_DIR "" CACHE PATH "Path to Node headers include directory (contains node_api.h)")
+
+# Auto-detect common locations if not provided
+if(NOT NODE_ADDON_API_DIR AND EXISTS "${CMAKE_SOURCE_DIR}/node_modules/node-addon-api/napi.h")
+    set(NODE_ADDON_API_DIR "${CMAKE_SOURCE_DIR}/node_modules/node-addon-api")
+endif()
+if(DEFINED CMAKE_JS_INC AND NOT NODE_INCLUDE_DIR)
+    set(NODE_INCLUDE_DIR "${CMAKE_JS_INC}")
+endif()
+
+if(NODE_BINDINGS)
+    set(_NODE_HEADERS_OK TRUE)
+    if(NOT EXISTS "${NODE_ADDON_API_DIR}/napi.h")
+        message(WARNING "node-addon-api not found: set NODE_ADDON_API_DIR to directory containing napi.h")
+        set(_NODE_HEADERS_OK FALSE)
+    endif()
+    if(NOT EXISTS "${NODE_INCLUDE_DIR}/node_api.h")
+        message(WARNING "Node headers not found: set NODE_INCLUDE_DIR to directory containing node_api.h")
+        set(_NODE_HEADERS_OK FALSE)
+    endif()
+
+    if(_NODE_HEADERS_OK)
+        add_library(remote_input_node MODULE
+                RemoteInput/Plugin/Node/NodeAddon.cxx
+                RemoteInput/Plugin/Node/NodeEIOS.cxx)
+
+        # Define N-API version
+        target_compile_definitions(remote_input_node PRIVATE NAPI_VERSION=8)
+
+        # Output name and extension for Node addon
+        set_target_properties(remote_input_node PROPERTIES
+                PREFIX ""
+                SUFFIX ".node"
+                OUTPUT_NAME "remote_input")
+
+        target_include_directories(remote_input_node PRIVATE
+                ${NODE_ADDON_API_DIR}
+                ${NODE_INCLUDE_DIR}
+                ${CMAKE_SOURCE_DIR}/RemoteInput/RemoteInput)
+
+        # Match Node's dynamic CRT on Windows
+        if(MSVC)
+            set_property(TARGET remote_input_node PROPERTY
+                    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        endif()
+
+        # Platform link libraries are generally not required for a simple addon scaffold.
+        # Add if needed in later phases.
+    else()
+        message(WARNING "NODE_BINDINGS enabled but required headers are missing. Skipping remote_input_node target.")
+    endif()
+endif()

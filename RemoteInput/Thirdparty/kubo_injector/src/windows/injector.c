@@ -38,6 +38,14 @@
 #include <tlhelp32.h>
 #include "injector.h"
 
+// Fallback definitions for MSVC C builds where __max/__min may be undefined
+#ifndef __max
+#define __max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef __min
+#define __min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 #if !defined(WDK_NTDDI_VERSION) || WDK_NTDDI_VERSION < 0x0A00000B
 // Windows SDK version < 10.0.22000.0
 #define ProcessMachineTypeInfo 9
@@ -178,6 +186,14 @@ static const char x86_code_template[] =
 
 #define X86_CODE_SIZE          0x0029
 
+#ifndef MAX2
+#define MAX2(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifdef CODE_SIZE
+#undef CODE_SIZE
+#endif
+#define CODE_SIZE MAX2(MAX2(X64_CODE_SIZE, ARM64_CODE_SIZE), MAX2(X86_CODE_SIZE, ARMT_CODE_SIZE))
+
 #ifdef _M_AMD64
 #define CURRENT_ARCH "x64"
 #define CURRENT_IMAGE_FILE_MACHINE IMAGE_FILE_MACHINE_AMD64
@@ -194,8 +210,6 @@ static const char x86_code_template[] =
 #define CURRENT_ARCH "x86"
 #define CURRENT_IMAGE_FILE_MACHINE IMAGE_FILE_MACHINE_I386
 #endif
-
-#define CODE_SIZE __max(__max(X64_CODE_SIZE, ARM64_CODE_SIZE), __max(X86_CODE_SIZE, ARMT_CODE_SIZE))
 
 static BOOL CallIsWow64Process2(HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine)
 {
