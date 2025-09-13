@@ -1,0 +1,47 @@
+{
+  "name": "java-remote-input",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "gypfile": true,
+  "scripts": {
+    "configure": "node-gyp configure",
+    "build": "node-gyp build",
+    "rebuild": "node-gyp rebuild",
+    "clean": "node-gyp clean",
+    "build:cmake": "cmake-js build --CDNODE_BINDINGS=ON --CDBUILD_REMOTEINPUT_CORE=OFF --CDPYTHON_BINDINGS=OFF --CDCMAKE_BUILD_TYPE=Release",
+    "core:configure": "cmake -S ./RemoteInput -B ./build/core -G \"Visual Studio 17 2022\" -A x64 -DBUILD_REMOTEINPUT_CORE=ON -DPYTHON_BINDINGS=OFF -DNODE_BINDINGS=OFF",
+    "core:build:Release": "cmake --build ./build/core --config Release",
+    "core:build:Debug": "cmake --build ./build/core --config Debug",
+    "core:rebuild:Release": "npm run core:configure && npm run core:build:Release",
+    "lib:build": "tsc -p tsconfig.lib.json",
+    "lib:test": "vitest run",
+    "lib:test:watch": "vitest",
+    "lib:bench": "node scripts/bench-color-lib.js",
+    "example:eios:color": "node scripts/example-eios-color.js",
+    "lint": "eslint . --ext .ts,.js",
+    "prepare": "npm run lib:build",
+    "prepublishOnly": "npm run lint && npm run lib:build && npm run lib:test",
+    "demo:clients": "set REMOTE_INPUT_DLL=%cd%\\build\\core\\libRemoteInput.dll && node -e \"const ri=require('./'); console.log('pids:', ri.EIOS.getClientsPids(false));\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-addon-api": "^8.5.0",
+    "pngjs": "^7.0.0",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.13",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "cmake-js": "^7.3.1",
+    "eslint": "^9.10.0",
+    "node-gyp": "^10.0.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

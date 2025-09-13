@@ -116,12 +116,28 @@ namespace {
             g_api.module = LoadLibraryA(path);
         }
         // Try default DLL names if not set
+        
+        #if defined(_WIN32)
         if (!g_api.module) {
-            g_api.module = LoadLibraryA("libRemoteInput.dll");
+            g_api.module = LoadLibraryA("libRemoteInput-i686.dll");
         }
+        #elif defined(_WIN64)
         if (!g_api.module) {
-            g_api.module = LoadLibraryA("RemoteInput.dll");
+            g_api.module = LoadLibraryA("libRemoteInput-x86_64.dll");
         }
+        #elif defined(__APPLE__)
+        if (!g_api.module) {
+            g_api.module = dlopen("libRemoteInput-x86_64.dylib", RTLD_LAZY);
+        }
+        #elif defined(__aarch64__) || defined(__arm__)
+        if (!g_api.module) {
+            g_api.module = dlopen("libRemoteInput-aarch64.so", RTLD_LAZY);
+        }
+        #elif defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+        if (!g_api.module) {
+            g_api.module = dlopen("libRemoteInput-x86_64.so", RTLD_LAZY);
+        }
+        #endif
         if (!g_api.module) {
             return false;
         }
