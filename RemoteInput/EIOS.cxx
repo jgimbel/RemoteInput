@@ -16,8 +16,6 @@
 
 std::unordered_map<std::int32_t, EIOS*> clients;
 std::vector<std::int32_t> all_clients;
-extern TSimbaInfomation PLUGIN_SIMBA_INFO;
-extern TSimbaMethodsExtended PLUGIN_SIMBA_METHODS;
 
 EIOS* STD_CALL EIOS_RequestTarget(const char* initargs) noexcept
 {
@@ -420,103 +418,4 @@ std::size_t STD_CALL EIOS_GetClients(bool unpaired_only) noexcept
 std::int32_t STD_CALL EIOS_GetClientPID(std::size_t index) noexcept
 {
     return index < all_clients.size() && all_clients.size() > 0 ? all_clients[index] : -1;
-}
-
-EIOS* SimbaPluginTarget_Request(const char* initargs) noexcept
-{
-    return EIOS_RequestTarget(initargs);
-}
-
-EIOS* SimbaPluginTarget_RequestWithDebugImage(const char* initargs, void** image) noexcept
-{
-    EIOS* eios = EIOS_RequestTarget(initargs);
-
-    if (image)
-    {
-        std::int32_t width = 0;
-        std::int32_t height = 0;
-        eios->control_center->get_target_dimensions(&width, &height);
-        eios->control_center->set_image_format(ImageFormat::BGRA);
-        eios->control_center->set_debug_graphics(true);
-        *image = PLUGIN_SIMBA_METHODS.ExternalImage_Create(true);
-        PLUGIN_SIMBA_METHODS.ExternalImage_SetMemory(*image, eios->control_center->get_debug_image(), width, height);         
-    }
-
-    return eios;
-}
-
-void SimbaPluginTarget_Release(EIOS* eios) noexcept
-{
-    EIOS_ReleaseTarget(eios);
-}
-
-void SimbaPluginTarget_GetDimensions(EIOS* eios, std::int32_t* width, std::int32_t* height) noexcept
-{
-    EIOS_GetTargetDimensions(eios, width, height);
-}
-
-bool SimbaPluginTarget_GetImageData(EIOS* eios, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height, void** bgra, std::int32_t* data_width) noexcept
-{
-    if (eios) 
-    {
-        *data_width = eios->control_center->get_target_width();
-        *bgra = &eios->control_center->get_image()[(y * (*data_width) + x) * 4];
-        
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool SimbaPluginTarget_MousePressed(EIOS* eios, int mouse_button) noexcept
-{
-    return EIOS_IsMouseButtonHeld(eios, mouse_button);
-}
-
-void SimbaPluginTarget_MousePosition(EIOS* eios, std::int32_t* x, std::int32_t* y) noexcept
-{
-    EIOS_GetMousePosition(eios, x, y);
-}
-
-void SimbaPluginTarget_MouseTeleport(EIOS* eios, std::int32_t x, std::int32_t y) noexcept
-{
-    EIOS_MoveMouse(eios, x, y);
-}
-
-void SimbaPluginTarget_MouseUp(EIOS* eios, int mouse_button) noexcept
-{
-    EIOS_ReleaseMouse(eios, 0, 0, mouse_button);
-}
-
-void SimbaPluginTarget_MouseDown(EIOS* eios, int mouse_button) noexcept
-{
-    EIOS_HoldMouse(eios, 0, 0, mouse_button);
-}
-
-void SimbaPluginTarget_MouseScroll(EIOS* eios, int scrolls) noexcept
-{
-    EIOS_ScrollMouse(eios, 0, 0, scrolls);
-}
-
-void SimbaPluginTarget_KeyDown(EIOS* eios, std::int32_t key) noexcept
-{
-    EIOS_HoldKey(eios, key);
-}
-
-void SimbaPluginTarget_KeyUp(EIOS* eios, std::int32_t key) noexcept
-{
-    EIOS_ReleaseKey(eios, key);
-}
-
-void SimbaPluginTarget_KeySend(EIOS* eios, char* text, std::int32_t len, std::int32_t* sleeptimes) noexcept
-{
-    if (eios)
-    {
-        eios->control_center->key_send(text, len, sleeptimes);
-    }
-}
-
-bool SimbaPluginTarget_KeyPressed(EIOS* eios, std::int32_t key) noexcept
-{
-    return EIOS_IsKeyHeld(eios, key);
 }

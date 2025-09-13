@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <cerrno>
+#include <algorithm>
 #include "Thirdparty/Hook.hxx"
 #if defined(CUSTOM_INJECTOR)
 #include "Injection/Injector.hxx"

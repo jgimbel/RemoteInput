@@ -174,7 +174,9 @@ bool atomic_lock::wait_polling(atomic_lock* self, bool (*test)(atomic_lock*), st
     return ::wait_polling(self, test, back_off, max_elapsed);
 }
 
-atomic_lock::atomic_lock() : flag(false) {}
+atomic_lock::atomic_lock() : flag() {
+    flag.clear(std::memory_order_relaxed);
+}
 
 void atomic_lock::lock()
 {

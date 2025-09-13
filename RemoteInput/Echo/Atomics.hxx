@@ -67,7 +67,7 @@ private:
     static bool wait_polling(binary_semaphore* self, bool (*test)(binary_semaphore*), std::chrono::nanoseconds max_elapsed = std::chrono::nanoseconds::zero());
 
 public:
-    constexpr explicit binary_semaphore(bool is_set = false) : flag(!is_set) {}
+    explicit binary_semaphore(bool is_set = false) {}
     ~binary_semaphore() = default;
 
     binary_semaphore(const binary_semaphore&) = delete;
