@@ -4,11 +4,6 @@
 #include "Plugin/NativePlugin.hxx"
 #include <cinttypes>
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-
 Napi::FunctionReference EIOSWrap::constructor;
 
 EIOSWrap::~EIOSWrap() = default;
@@ -60,14 +55,6 @@ Napi::Object EIOSWrap::Init(Napi::Env env, Napi::Object exports)
     constructor.SuppressDestruct();
 
     exports.Set("EIOS", cls);
-    // Export ImageFormat enum (mirrors native order)
-    Napi::Object imageFormat = Napi::Object::New(env);
-    imageFormat.Set("BGR_BGRA", Napi::Number::New(env, 0));
-    imageFormat.Set("BGRA", Napi::Number::New(env, 1));
-    imageFormat.Set("RGBA", Napi::Number::New(env, 2));
-    imageFormat.Set("ARGB", Napi::Number::New(env, 3));
-    imageFormat.Set("ABGR", Napi::Number::New(env, 4));
-    exports.Set("ImageFormat", imageFormat);
     return exports;
 }
 
@@ -113,7 +100,7 @@ Napi::Value EIOSWrap::InjectPid(const Napi::CallbackInfo& info)
 {
     if (!NodeRI::EnsureArgCount(info, 1, 1) || !NodeRI::EnsureType(info, 0, napi_number)) return info.Env().Undefined();
     std::int32_t pid = info[0].As<Napi::Number>().Int32Value();
-    
+    EIOS_Inject_PID(pid);
     return info.Env().Undefined();
 }
 

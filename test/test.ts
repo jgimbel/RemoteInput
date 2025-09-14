@@ -1,70 +1,68 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Constants (avoid magic values)
 const DEFAULT_PROCESS_NAME = process.env.TARGET_PROCESS_NAME || 'RuneLite.exe';
 const FALLBACK_PROCESS_NAME = process.env.TARGET_FALLBACK_PROCESS_NAME || 'javaw.exe';
 const TARGET_PID_ENV = process.env.TARGET_PID;
 
-function prefer(a, b) {
-  return a !== undefined && a !== null ? a : b;
-}
+// function resolveLocalDll() {
+//   const candidates = [
+//     path.join(__dirname, '..', 'build', 'core', 'libRemoteInput.dll'),
+//     path.join(__dirname, '..', 'build', 'core', 'Release', 'libRemoteInput.dll'),
+//     path.join(__dirname, '..', 'build', 'core', 'Debug', 'libRemoteInput.dll'),
+//     path.join(__dirname, '..', 'libRemoteInput.dll'),
+//     path.join(process.cwd(), 'build', 'core', 'libRemoteInput.dll'),
+//     path.join(process.cwd(), 'build', 'core', 'Release', 'libRemoteInput.dll'),
+//     path.join(process.cwd(), 'build', 'core', 'Debug', 'libRemoteInput.dll'),
+//   ];
+//   for (const p of candidates) {
+//     try {
+//       if (fs.existsSync(p)) return p;
+//     } catch (_) {}
+//   }
+//   return null;
+// }
 
-function resolveLocalDll() {
-  const candidates = [
-    path.join(__dirname, '..', 'build', 'core', 'libRemoteInput.dll'),
-    path.join(__dirname, '..', 'build', 'core', 'Release', 'libRemoteInput.dll'),
-    path.join(__dirname, '..', 'build', 'core', 'Debug', 'libRemoteInput.dll'),
-    path.join(__dirname, '..', 'libRemoteInput.dll'),
-    path.join(process.cwd(), 'build', 'core', 'libRemoteInput.dll'),
-    path.join(process.cwd(), 'build', 'core', 'Release', 'libRemoteInput.dll'),
-    path.join(process.cwd(), 'build', 'core', 'Debug', 'libRemoteInput.dll'),
-  ];
-  for (const p of candidates) {
-    try {
-      if (fs.existsSync(p)) return p;
-    } catch (_) {}
-  }
-  return null;
-}
-
-(function ensureDllEnv() {
-  if (!process.env.REMOTE_INPUT_DLL) {
-    const guess = resolveLocalDll();
-    if (guess) {
-      process.env.REMOTE_INPUT_DLL = guess;
-      console.log(`[info] REMOTE_INPUT_DLL not set; using ${guess}`);
-    } else {
-      console.log('[warn] REMOTE_INPUT_DLL not set and no local DLL found. Relying on system PATH.');
-    }
-  }
-})();
+// (function ensureDllEnv() {
+//   if (!process.env.REMOTE_INPUT_DLL) {
+//     const guess = resolveLocalDll();
+//     if (guess) {
+//       process.env.REMOTE_INPUT_DLL = guess;
+//       console.log(`[info] REMOTE_INPUT_DLL not set; using ${guess}`);
+//     } else {
+//       console.log('[warn] REMOTE_INPUT_DLL not set and no local DLL found. Relying on system PATH.');
+//     }
+//   }
+// })();
 
 // Load addon from package root
-const ri = require('..');
+import ri from '../src/index';
 
-function enumKeyByValue(obj, val) {
+console.log(Object.keys(ri));
+
+function enumKeyByValue(obj: Record<string, any>, val: any): string {
   return Object.keys(obj).find(k => obj[k] === val) || String(val);
 }
 
-function logStep(title, data) {
+function logStep(title: string, data?: any) {
   console.log(`\n=== ${title} ===`);
   if (data !== undefined) console.log(data);
 }
 
-function choosePid(pids) {
+function choosePid(pids: number[] | null): number | undefined {
   if (TARGET_PID_ENV && !Number.isNaN(Number(TARGET_PID_ENV))) return Number(TARGET_PID_ENV);
   return pids && pids.length > 0 ? pids[0] : undefined;
 }
 
-function tryInject(name) {
+function tryInject(name: string) {
   try {
     ri.EIOS.inject(name);
     console.log(`[ok] inject(${name})`);
   } catch (e) {
-    console.log(`[warn] inject(${name}) failed or not needed:`, e?.message || e);
+    console.log(`[warn] inject(${name}) failed or not needed:`, (e as Error)?.message || e);
   }
 }
 
@@ -147,7 +145,7 @@ function main() {
     const mouse2 = e.getMousePosition();
     logStep('Mouse position after move', mouse2);
   } catch (err) {
-    console.log('[warn] moveMouse failed:', err?.message || err);
+    console.log('[warn] moveMouse failed:', (err as Error)?.message || err);
   }
 
   // Keyboard
@@ -160,7 +158,7 @@ function main() {
     e.sendString('test', 0, 0);
     console.log('[ok] sendString("test")');
   } catch (err) {
-    console.log('[warn] Keyboard ops failed:', err?.message || err);
+    console.log('[warn] Keyboard ops failed:', (err as Error)?.message || err);
   }
 
   console.log('\nAll checks done.');
@@ -169,6 +167,6 @@ function main() {
 try {
   main();
 } catch (err) {
-  console.error('[fatal] Unexpected error:', err?.stack || err?.message || err);
+  console.error('[fatal] Unexpected error:', (err as Error)?.stack || (err as Error)?.message || err);
   process.exitCode = 1;
 }

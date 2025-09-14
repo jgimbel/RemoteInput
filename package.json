@@ -15,7 +15,7 @@
     "core:build:Release": "cmake --build ./build/core --config Release",
     "core:build:Debug": "cmake --build ./build/core --config Debug",
     "core:rebuild:Release": "npm run core:configure && npm run core:build:Release",
-    "lib:build": "tsc -p tsconfig.lib.json",
+    "lib:build": "tsc -p tsconfig.json",
     "lib:test": "vitest run",
     "lib:test:watch": "vitest",
     "lib:bench": "node scripts/bench-color-lib.js",

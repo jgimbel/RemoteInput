@@ -403,9 +403,7 @@ std::int32_t PIDFromWindow(void* window) noexcept
     GetWindowThreadProcessId(static_cast<HWND>(window), &pid);
     return static_cast<std::int32_t>(pid);
 }
-#endif // defined
 
-#if defined(_WIN32) || defined(_WIN64)
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) noexcept
 {
     DWORD pid = 0;
